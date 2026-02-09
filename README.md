@@ -45,7 +45,7 @@ python3 --version
 cd ~/Desktop
 
 # 프로젝트 클론 (다운로드)
-git clone https://github.com/KimJoohyung4232/final-project.git
+git clone https://github.com/donggi22/local_Covid-diagnosis
 
 # 프로젝트 폴더로 이동
 cd final-project
