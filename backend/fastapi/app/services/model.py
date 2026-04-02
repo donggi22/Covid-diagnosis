@@ -723,7 +723,7 @@ def predict(image_path: Path) -> Dict[str, Any]:
 
             original_image = Image.open(image_path).convert('RGB')
 
-            gradcam_base = os.getenv('GRADCAM_STORAGE_PATH', str(BASE_DIR / 'Final_Back' / 'fastapi' / 'app' / 'static'))
+            gradcam_base = os.getenv('GRADCAM_STORAGE_PATH', str(Path(__file__).resolve().parent.parent / 'static'))
             static_dir = Path(gradcam_base)
             gradcam_dir = static_dir / 'gradcam'
             gradcam_dir.mkdir(parents=True, exist_ok=True)

@@ -3,24 +3,22 @@
 
 # Node.js
 node_modules/
-Final_Front/node_modules/
-Final_Front2/node_modules/
-Final_Front4/node_modules/
-Final_Back/express/node_modules/
-Final_Back/fastapi/venv/
+frontend/node_modules/
+backend/express/node_modules/
+backend/fastapi/venv/
 
 # Python cache
 __pycache__/
 *.pyc
 
 # Upload artifacts
-Final_Back/express/src/uploads/
+backend/express/src/uploads/
 
 # MongoDB data
-Final_Back/mongodb_data/
+backend/mongodb_data/
 
 # FastAPI static files (gradcam images)
-Final_Back/fastapi/app/static/
+backend/fastapi/app/static/
 
 # Logs
 npm-debug.log*
@@ -32,8 +30,8 @@ yarn-error.log*
 .env.development.local
 .env.local
 .env.production.local
-Final_Back/express/.env
-Final_Back/fastapi/.env
+backend/express/.env
+backend/fastapi/.env
 
 NUL
 
