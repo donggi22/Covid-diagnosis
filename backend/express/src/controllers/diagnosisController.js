@@ -134,6 +134,7 @@ exports.analyzeOnly = async (req, res) => {
     }
 
     let aiAnalysis;
+    let cloudinaryImageUrl = null;
 
     try {
       const formDataStartTime = Date.now();
@@ -224,6 +225,12 @@ exports.analyzeOnly = async (req, res) => {
         gradcamPlusPath: data.gradcam_plus_path || null,
         layercamPath: data.layercam_path || null,
       };
+
+      // Cloudinary 원본 이미지 URL 캡처
+      if (data.image_url) {
+        cloudinaryImageUrl = data.image_url;
+        console.log(`📡 Cloudinary 원본 이미지 URL 캡처: ${cloudinaryImageUrl}`);
+      }
     } catch (fastApiError) {
       console.error('FastAPI 호출 실패:');
       console.error('에러 메시지:', fastApiError.message);
@@ -248,7 +255,7 @@ exports.analyzeOnly = async (req, res) => {
       gradcamPlusPath: aiAnalysis.gradcamPlusPath,
       layerCamPath: aiAnalysis.layercamPath, // 진단 시 사용 (하위 호환성)
       layercamPath: aiAnalysis.layercamPath, // 진단 이력에서 사용
-      imageUrl: req.file ? `/uploads/${req.file.filename}` : null,
+      imageUrl: cloudinaryImageUrl || (req.file ? `/uploads/${req.file.filename}` : null),
     });
   } catch (error) {
     console.error('AI 분석 오류:', error);
@@ -270,7 +277,7 @@ exports.createDiagnosis = async (req, res) => {
     }
 
     const imagePath = req.file ? path.join(__dirname, '..', 'uploads', req.file.filename) : null;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    let imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
     if (!imagePath) {
       return res.status(400).json({ error: '이미지 파일이 필요합니다.' });

@@ -185,7 +185,7 @@ const DiagnosisHistory = () => {
                   <th>진단일</th>
                   <th>진단결과</th>
                   <th>증상</th>
-                  <th>영상타입</th>
+                  {/* <th>영상타입</th> */}
                   <th>AI신뢰도</th>
                   <th>진단상태</th>
                   <th>담당의</th>
@@ -227,7 +227,7 @@ const DiagnosisHistory = () => {
                           <span className="diagnosis-result">{diagnosisResult}</span>
                         </td>
                         <td className="cell-symptoms">{diagnosis.symptoms || '-'}</td>
-                        <td className="cell-image">{diagnosis.imageUrl ? 'X-ray' : '-'}</td>
+                        {/* <td className="cell-image">{diagnosis.imageUrl ? 'X-ray' : '-'}</td> */}
                         <td className="cell-confidence">
                           <span
                             className="confidence-badge"
@@ -259,8 +259,8 @@ const DiagnosisHistory = () => {
                           <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
                             <button
                               className="btn btn-primary"
-                              style={{ 
-                                padding: '4px 8px', 
+                              style={{
+                                padding: '4px 8px',
                                 fontSize: '12px',
                                 minWidth: '60px'
                               }}
@@ -317,8 +317,8 @@ const DiagnosisHistory = () => {
                             </button>
                             <button
                               className="btn btn-danger btn-delete"
-                              style={{ 
-                                padding: '4px 8px', 
+                              style={{
+                                padding: '4px 8px',
                                 fontSize: '12px',
                                 minWidth: '40px'
                               }}

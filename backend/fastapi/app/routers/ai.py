@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 import os
 import json
+import uuid
 
 import app.db.mongo as mongo
 from app.models.ai import DiagnosisResponse, Finding
@@ -63,9 +64,12 @@ async def diagnose(
                 upload_task_start = time.time()
                 with Image.open(temp_path) as img:
                     # JPEG로 변환하여 업로드 속도 향상 (cloudinary_service 내부에서 처리)
+                    # 고유 파일명 생성: patient_id + uuid로 덮어쓰기 방지
+                    base_name = os.path.splitext(image.filename or 'upload')[0]
+                    unique_filename = f"original_{patient_id}_{uuid.uuid4().hex[:12]}_{base_name}"
                     url = await asyncio.to_thread(
                         cloudinary_service.upload_image, 
-                        img, f"original_{image.filename or 'upload'}", "uploads"
+                        img, unique_filename, "uploads"
                     )
                     duration = time.time() - upload_task_start
                     print(f"     ✅ [Router] 원본 이미지 업로드 성공 ({duration:.2f}초)")

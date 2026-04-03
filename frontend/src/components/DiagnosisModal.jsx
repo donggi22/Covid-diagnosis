@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import "./DiagnosisModal.css";
 
-export default function DiagnosisModal({ isOpen, onClose, data, onSave, onNewDiagnosis }) {
+export default function DiagnosisModal({ isOpen, onClose, data, onSave, onNewDiagnosis, mode }) {
   if (!isOpen || !data) return null;
 
   const {
@@ -88,7 +88,7 @@ export default function DiagnosisModal({ isOpen, onClose, data, onSave, onNewDia
             )}
           </div>
 
-          {/* 병명 추정값 카드 (권장사항 포함) */}
+          {/* 신뢰도 및 권장사항 카드 */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-3">
@@ -134,24 +134,35 @@ export default function DiagnosisModal({ isOpen, onClose, data, onSave, onNewDia
           </div>
         </div>
 
-        {/* Footer Buttons (optional) */}
+        {/* Footer Buttons */}
         {(onSave || onNewDiagnosis) && (
           <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             {onSave && (
-              <>
+              mode === 'save' ? (
+                /* AI 진단 모드: 버튼 하나 */
                 <button
-                  onClick={() => onSave('rejected')}
-                  className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                  onClick={() => onSave()}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                 >
-                  검토 필요
+                  진단 결과 저장
                 </button>
-                <button
-                  onClick={() => onSave('approved')}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  진단 확정
-                </button>
-              </>
+              ) : (
+                /* 진단 이력 모드: 검토 필요 + 진단 확정 */
+                <>
+                  <button
+                    onClick={() => onSave('rejected')}
+                    className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                  >
+                    검토 필요
+                  </button>
+                  <button
+                    onClick={() => onSave('approved')}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    진단 확정
+                  </button>
+                </>
+              )
             )}
             {onNewDiagnosis && (
               <button

@@ -243,7 +243,7 @@ const AIDiagnosis = () => {
     }
   };
 
-  const handleSaveDiagnosis = async (status) => {
+  const handleSaveDiagnosis = async () => {
     if (!diagnosisResult) {
       alert('저장할 진단 결과가 없습니다.');
       return;
@@ -269,9 +269,9 @@ const AIDiagnosis = () => {
         imageUrl: diagnosisResult.imageUrl,
         symptoms: patientInfo.symptoms,
         review: {
-          status: status || 'approved',
-          summary: status === 'approved' ? '진단 결과 확정' : '추가 검토 필요',
-          notes: status === 'approved' ? '전문의가 진단 결과를 최종 확정했습니다.' : '진단 결과에 의문이 있어 추가 검토가 필요합니다.',
+          status: 'pending',
+          summary: '진단 결과 저장됨',
+          notes: 'AI 진단 결과가 저장되었습니다.',
           updatedAt: new Date()
         }
       };
@@ -279,11 +279,7 @@ const AIDiagnosis = () => {
       const result = await diagnosisAPI.saveDiagnosis(saveData);
 
       if (result && result.diagnosis) {
-        setDiagnosisResult({
-          ...diagnosisResult,
-          diagnosisId: result.diagnosis._id
-        });
-        alert(status === 'rejected' ? '진단 결과가 검토 필요 상태로 저장되었습니다.' : '진단 결과가 확정되었습니다.');
+        alert('진단 결과가 저장되었습니다.');
         setIsModalOpen(false);
         navigate('/history');
       } else {
@@ -533,7 +529,8 @@ const AIDiagnosis = () => {
               : '추가 검진을 권장합니다.',
             aiNotes: diagnosisResult.aiNotes || 'UNet 기반 폐 분할 + ResNet50 기반 흉부 엑스레이 질환 분류 추론 결과입니다.'
           }}
-          onSave={(status) => handleSaveDiagnosis(status)}
+          onSave={() => handleSaveDiagnosis()}
+          mode="save"
           onNewDiagnosis={() => {
             setIsModalOpen(false);
             setDiagnosisResult(null);
