@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './AIDiagnosis.css';
 import { patientAPI, diagnosisAPI } from '../utils/api';
 import MainLayout from './layout/MainLayout';
@@ -17,6 +17,8 @@ const AIDiagnosis = () => {
     name: '',
     age: '',
     gender: '',
+    roomNumber: '',
+    medicalRecordNumber: '',
     symptoms: ''
   });
   const [isDragging, setIsDragging] = useState(false);
@@ -24,13 +26,14 @@ const AIDiagnosis = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // 환자 목록 불러오기
   useEffect(() => {
     const fetchPatients = async () => {
       try {
         const data = await patientAPI.getPatients();
-        setPatients(data);
+        setPatients(data || []);
       } catch (err) {
         console.error('환자 목록 조회 오류:', err);
       }
@@ -43,6 +46,41 @@ const AIDiagnosis = () => {
       navigate('/');
     }
   }, [navigate]);
+
+  // 전달받은 환자 정보가 있다면 자동 선택
+  useEffect(() => {
+    // 1. 전달받은 전체 데이터가 있는 경우 - 즉시 셋팅
+    if (location.state?.patient) {
+      const p = location.state.patient;
+      setSelectedPatientId(p._id);
+      setPatientInfo({
+        name: p.name,
+        age: p.age || '',
+        gender: p.gender || '',
+        symptoms: ''
+      });
+      // 처리 후 state 초기화
+      window.history.replaceState({}, document.title);
+    } 
+    // 2. ID만 있는 경우 - 목록이 로드될 때까지 대기 후 셋팅
+    else if (patients.length > 0 && location.state?.patientId) {
+      const pId = location.state.patientId;
+      const patient = patients.find(p => p._id === pId);
+      
+      if (patient) {
+        setSelectedPatientId(pId);
+        setPatientInfo({
+          name: patient.name,
+          age: patient.age || '',
+          gender: patient.gender || '',
+          roomNumber: patient.roomNumber || '',
+          medicalRecordNumber: patient.medicalRecordNumber || '',
+          symptoms: ''
+        });
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [patients, location.state]);
 
   // 파일 검증 함수
   const validateFile = (file) => {
@@ -141,25 +179,27 @@ const AIDiagnosis = () => {
     try {
       // 환자 ID가 없으면 먼저 환자 등록
       let patientId = selectedPatientId;
-      
+
       if (!patientId && patientInfo.name) {
         // 새 환자 등록
         const newPatient = await patientAPI.createPatient({
           name: patientInfo.name,
           age: patientInfo.age ? parseInt(patientInfo.age) : undefined,
           gender: patientInfo.gender || undefined,
+          roomNumber: patientInfo.roomNumber || undefined,
+          medicalRecordNumber: patientInfo.medicalRecordNumber || undefined
         });
         patientId = newPatient._id;
       }
 
       // AI 분석만 수행 (저장 안함)
       const result = await diagnosisAPI.analyzeOnly(patientId, selectedFile);
-      
+
       // AI 분석 결과 포맷팅
       if (result) {
         // confidence를 퍼센트로 변환
         const confidence = Math.round((result.confidence || 0) * 100);
-        
+
         // findings 포맷팅
         const findings = (result.findings || []).map(finding => ({
           condition: finding.condition || '알 수 없음',
@@ -168,7 +208,7 @@ const AIDiagnosis = () => {
         }));
 
         // predicted_class가 있으면 첫 번째 finding으로 설정
-        const primaryFinding = result.predictedClass 
+        const primaryFinding = result.predictedClass
           ? findings.find(f => f.condition === result.predictedClass) || findings[0]
           : findings[0];
 
@@ -181,14 +221,14 @@ const AIDiagnosis = () => {
             description: '특별한 이상 소견이 발견되지 않았습니다.'
           }],
           recommendations: result.recommendations || [],
-          aiNotes: result.aiNotes || result.ai_notes || 'UNet 기반 폐 분할 + ResNet50 기반 폐질환 분류 모델 추론 결과입니다.',
+          aiNotes: result.aiNotes || result.ai_notes || 'UNet 기반 폐 분할 + ResNet50 기반 흉부 엑스레이 질환 분류 추론 결과입니다.',
           gradcamUrl: result.gradcamPath || result.gradcamUrl || null,
           gradcamPlusUrl: result.gradcamPlusPath || result.gradcamPlusUrl || null,
           layerCamUrl: result.layerCamPath || result.layerCamUrl || null,
           patientId: patientId,
           imageUrl: result.imageUrl || null
         });
-        
+
         // 모달 열기
         setIsModalOpen(true);
       } else {
@@ -203,7 +243,7 @@ const AIDiagnosis = () => {
     }
   };
 
-  const handleSaveDiagnosis = async () => {
+  const handleSaveDiagnosis = async (status) => {
     if (!diagnosisResult) {
       alert('저장할 진단 결과가 없습니다.');
       return;
@@ -226,17 +266,24 @@ const AIDiagnosis = () => {
           gradcamPlusPath: diagnosisResult.gradcamPlusUrl,
           layercamPath: diagnosisResult.layerCamUrl || diagnosisResult.layercamUrl
         },
-        imageUrl: diagnosisResult.imageUrl
+        imageUrl: diagnosisResult.imageUrl,
+        symptoms: patientInfo.symptoms,
+        review: {
+          status: status || 'approved',
+          summary: status === 'approved' ? '진단 결과 확정' : '추가 검토 필요',
+          notes: status === 'approved' ? '전문의가 진단 결과를 최종 확정했습니다.' : '진단 결과에 의문이 있어 추가 검토가 필요합니다.',
+          updatedAt: new Date()
+        }
       };
 
       const result = await diagnosisAPI.saveDiagnosis(saveData);
-      
+
       if (result && result.diagnosis) {
         setDiagnosisResult({
           ...diagnosisResult,
           diagnosisId: result.diagnosis._id
         });
-        alert('진단 결과가 저장되었습니다.');
+        alert(status === 'rejected' ? '진단 결과가 검토 필요 상태로 저장되었습니다.' : '진단 결과가 확정되었습니다.');
         setIsModalOpen(false);
         navigate('/history');
       } else {
@@ -262,17 +309,30 @@ const AIDiagnosis = () => {
                 <select
                   value={selectedPatientId}
                   onChange={(e) => {
-                    setSelectedPatientId(e.target.value);
-                    if (e.target.value) {
-                      const patient = patients.find(p => p._id === e.target.value);
+                    const pId = e.target.value;
+                    setSelectedPatientId(pId);
+                    if (pId) {
+                      const patient = patients.find(p => p._id === pId);
                       if (patient) {
                         setPatientInfo({
                           name: patient.name,
                           age: patient.age || '',
                           gender: patient.gender || '',
+                          roomNumber: patient.roomNumber || '',
+                          medicalRecordNumber: patient.medicalRecordNumber || '',
                           symptoms: ''
                         });
                       }
+                    } else {
+                      // 선택 해제 시 필드 초기화
+                      setPatientInfo({
+                        name: '',
+                        age: '',
+                        gender: '',
+                        roomNumber: '',
+                        medicalRecordNumber: '',
+                        symptoms: ''
+                      });
                     }
                   }}
                   className="form-input"
@@ -289,15 +349,18 @@ const AIDiagnosis = () => {
                 또는
               </div>
               <div className="form-group">
-                <label className="form-label">새 환자 정보 입력</label>
+                <label className="form-label">
+                  새 환자 정보 입력 {selectedPatientId && <span style={{fontSize: '11px', color: '#6366f1', fontWeight: '500', marginLeft: '6px'}}>(기존 환자 선택됨)</span>}
+                </label>
                 <input
                   type="text"
                   value={patientInfo.name}
+                  readOnly={!!selectedPatientId}
                   onChange={(e) => {
-                    setPatientInfo({...patientInfo, name: e.target.value});
+                    setPatientInfo({ ...patientInfo, name: e.target.value });
                     setSelectedPatientId(''); // 새 환자 입력 시 선택 해제
                   }}
-                  className="form-input"
+                  className={`form-input ${selectedPatientId ? 'input-locked' : ''}`}
                   placeholder="환자 이름을 입력하세요"
                 />
               </div>
@@ -307,8 +370,9 @@ const AIDiagnosis = () => {
                   <input
                     type="number"
                     value={patientInfo.age}
-                    onChange={(e) => setPatientInfo({...patientInfo, age: e.target.value})}
-                    className="form-input"
+                    readOnly={!!selectedPatientId}
+                    onChange={(e) => setPatientInfo({ ...patientInfo, age: e.target.value })}
+                    className={`form-input ${selectedPatientId ? 'input-locked' : ''}`}
                     placeholder="나이"
                   />
                 </div>
@@ -316,8 +380,9 @@ const AIDiagnosis = () => {
                   <label className="form-label">성별</label>
                   <select
                     value={patientInfo.gender}
-                    onChange={(e) => setPatientInfo({...patientInfo, gender: e.target.value})}
-                    className="form-input"
+                    disabled={!!selectedPatientId}
+                    onChange={(e) => setPatientInfo({ ...patientInfo, gender: e.target.value })}
+                    className={`form-input ${selectedPatientId ? 'input-locked' : ''}`}
                   >
                     <option value="">선택</option>
                     <option value="남성">남성</option>
@@ -325,11 +390,35 @@ const AIDiagnosis = () => {
                   </select>
                 </div>
               </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">차트번호</label>
+                  <input
+                    type="text"
+                    value={patientInfo.medicalRecordNumber}
+                    readOnly={!!selectedPatientId}
+                    onChange={(e) => setPatientInfo({ ...patientInfo, medicalRecordNumber: e.target.value })}
+                    className={`form-input ${selectedPatientId ? 'input-locked' : ''}`}
+                    placeholder="차트번호"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">병실번호</label>
+                  <input
+                    type="text"
+                    value={patientInfo.roomNumber}
+                    readOnly={!!selectedPatientId}
+                    onChange={(e) => setPatientInfo({ ...patientInfo, roomNumber: e.target.value })}
+                    className={`form-input ${selectedPatientId ? 'input-locked' : ''}`}
+                    placeholder="예: 501호"
+                  />
+                </div>
+              </div>
               <div className="form-group">
                 <label className="form-label">증상 (선택사항)</label>
                 <textarea
                   value={patientInfo.symptoms}
-                  onChange={(e) => setPatientInfo({...patientInfo, symptoms: e.target.value})}
+                  onChange={(e) => setPatientInfo({ ...patientInfo, symptoms: e.target.value })}
                   className="form-textarea"
                   placeholder="환자의 증상을 입력하세요"
                 />
@@ -401,7 +490,7 @@ const AIDiagnosis = () => {
                     이미지 제거
                   </button>
                 )}
-                <button 
+                <button
                   onClick={handleAnalyze}
                   disabled={!selectedFile || (!selectedPatientId && !patientInfo.name) || isAnalyzing}
                   className="btn btn-primary btn-large"
@@ -428,23 +517,23 @@ const AIDiagnosis = () => {
           onClose={() => setIsModalOpen(false)}
           data={{
             originalImage: preview || null,
-            gradcam: diagnosisResult.gradcamUrl 
-              ? `${process.env.REACT_APP_FASTAPI_URL || 'http://localhost:8000'}${diagnosisResult.gradcamUrl}` 
+            gradcam: diagnosisResult.gradcamUrl
+              ? (diagnosisResult.gradcamUrl.startsWith('http') ? diagnosisResult.gradcamUrl : `${process.env.REACT_APP_FASTAPI_URL || 'http://localhost:8000'}${diagnosisResult.gradcamUrl}`)
               : null,
-            gradcamPP: diagnosisResult.gradcamPlusUrl 
-              ? `${process.env.REACT_APP_FASTAPI_URL || 'http://localhost:8000'}${diagnosisResult.gradcamPlusUrl}` 
+            gradcamPP: diagnosisResult.gradcamPlusUrl
+              ? (diagnosisResult.gradcamPlusUrl.startsWith('http') ? diagnosisResult.gradcamPlusUrl : `${process.env.REACT_APP_FASTAPI_URL || 'http://localhost:8000'}${diagnosisResult.gradcamPlusUrl}`)
               : null,
-            layercam: diagnosisResult.layerCamUrl 
-              ? `${process.env.REACT_APP_FASTAPI_URL || 'http://localhost:8000'}${diagnosisResult.layerCamUrl}` 
+            layercam: diagnosisResult.layerCamUrl
+              ? (diagnosisResult.layerCamUrl.startsWith('http') ? diagnosisResult.layerCamUrl : `${process.env.REACT_APP_FASTAPI_URL || 'http://localhost:8000'}${diagnosisResult.layerCamUrl}`)
               : null,
             findings: diagnosisResult.findings || [],
             confidence: diagnosisResult.confidence || 0,
             recommendation: diagnosisResult.recommendations && diagnosisResult.recommendations.length > 0
               ? diagnosisResult.recommendations.join(' ')
               : '추가 검진을 권장합니다.',
-            aiNotes: diagnosisResult.aiNotes || 'UNet 기반 폐 분할 + ResNet50 기반 폐질환 분류 모델 추론 결과입니다.'
+            aiNotes: diagnosisResult.aiNotes || 'UNet 기반 폐 분할 + ResNet50 기반 흉부 엑스레이 질환 분류 추론 결과입니다.'
           }}
-          onSave={handleSaveDiagnosis}
+          onSave={(status) => handleSaveDiagnosis(status)}
           onNewDiagnosis={() => {
             setIsModalOpen(false);
             setDiagnosisResult(null);

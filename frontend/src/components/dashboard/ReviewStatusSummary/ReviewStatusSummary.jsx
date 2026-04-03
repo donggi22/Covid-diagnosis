@@ -61,14 +61,14 @@ const ReviewStatusSummary = () => {
       barColor: 'bg-yellow-500',
     },
     {
-      label: '검토 완료',
+      label: '진단 확정',
       count: statusStats.completed,
       percentage: getPercentage(statusStats.completed),
       color: 'bg-green-100 text-green-700',
       barColor: 'bg-green-500',
     },
     {
-      label: '확인 필요',
+      label: '검토 필요',
       count: statusStats.reviewNeeded,
       percentage: getPercentage(statusStats.reviewNeeded),
       color: 'bg-orange-100 text-orange-700',

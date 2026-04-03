@@ -524,6 +524,19 @@
   }
 }
 
+/* 입력창 잠금 스타일 */
+.input-locked {
+  background-color: #f3f4f6 !important;
+  color: #6b7280 !important;
+  cursor: not-allowed;
+  border-color: #e5e7eb !important;
+}
+
+.input-locked:focus {
+  border-color: #e5e7eb !important;
+  box-shadow: none !important;
+}
+
 
 
 

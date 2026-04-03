@@ -12,7 +12,8 @@ export default function DiagnosisModal({ isOpen, onClose, data, onSave, onNewDia
     findings = [],
     confidence,
     recommendation,
-    aiNotes
+    aiNotes,
+    symptoms
   } = data;
 
   // ESC 키로 모달 닫기
@@ -69,14 +70,14 @@ export default function DiagnosisModal({ isOpen, onClose, data, onSave, onNewDia
                     <div className="flex-1">
                       <div className="text-base font-medium text-gray-700 dark:text-gray-100 mb-1">{finding.condition}</div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {finding.condition} 확률: {typeof finding.probability === 'number' 
-                          ? `${finding.probability.toFixed(2)}%` 
+                        {finding.condition} 확률: {typeof finding.probability === 'number'
+                          ? `${finding.probability.toFixed(2)}%`
                           : finding.probability}
                       </div>
                     </div>
                     <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold min-w-[50px] text-center">
-                      {typeof finding.probability === 'number' 
-                        ? `${Math.round(finding.probability)}%` 
+                      {typeof finding.probability === 'number'
+                        ? `${Math.round(finding.probability)}%`
                         : finding.probability}
                     </div>
                   </div>
@@ -91,14 +92,14 @@ export default function DiagnosisModal({ isOpen, onClose, data, onSave, onNewDia
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-3">
-                <h4 className="text-xl font-semibold text-gray-800 dark:text-gray-100 m-0">병명 추정값</h4>
+                <h4 className="text-xl font-semibold text-gray-800 dark:text-gray-100 m-0">예측 신뢰도</h4>
                 <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white px-3 py-1.5 rounded-lg text-base font-bold">
                   {confidence}%
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">AI 신뢰도</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">모델이 예측한 전체 신뢰도입니다.</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">AI가 예측한 신뢰도입니다.</div>
               </div>
             </div>
             {/* 권장 사항 */}
@@ -110,12 +111,23 @@ export default function DiagnosisModal({ isOpen, onClose, data, onSave, onNewDia
                 </div>
               </div>
             </div>
+            {/* 환자 증상 */}
+            {symptoms && (
+              <div className="mt-4">
+                <div className="px-4 py-3.5 bg-blue-50 dark:bg-blue-900/30 rounded-[10px] border border-blue-200 dark:border-blue-700">
+                  <div className="text-base font-medium text-blue-800 dark:text-blue-100 mb-1">환자 증상</div>
+                  <div className="text-sm text-blue-900 dark:text-blue-100 leading-relaxed italic">
+                    "{symptoms}"
+                  </div>
+                </div>
+              </div>
+            )}
             {/* AI 분석 노트 */}
             <div className="mt-3">
               <div className="px-4 py-3.5 bg-yellow-50 dark:bg-yellow-900/30 rounded-[10px] border border-yellow-200 dark:border-yellow-600">
                 <div className="text-base font-medium text-gray-800 dark:text-yellow-100 mb-1">AI 분석 노트</div>
                 <div className="text-sm text-yellow-900 dark:text-yellow-100 leading-relaxed">
-                  {aiNotes || 'UNet 기반 폐 분할 + ResNet50 기반 COVID-19 분류 모델 추론 결과입니다.'}
+                  {aiNotes || 'UNet 기반 폐 분할 + ResNet50 기반 흉부 엑스레이 질환 분류 모델 추론 결과입니다.'}
                 </div>
               </div>
             </div>
@@ -126,12 +138,20 @@ export default function DiagnosisModal({ isOpen, onClose, data, onSave, onNewDia
         {(onSave || onNewDiagnosis) && (
           <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             {onSave && (
-              <button
-                onClick={onSave}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                진단 결과 저장
-              </button>
+              <>
+                <button
+                  onClick={() => onSave('rejected')}
+                  className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                >
+                  검토 필요
+                </button>
+                <button
+                  onClick={() => onSave('approved')}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  진단 확정
+                </button>
+              </>
             )}
             {onNewDiagnosis && (
               <button

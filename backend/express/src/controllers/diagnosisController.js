@@ -14,7 +14,7 @@ const FASTAPI_URL = process.env.FASTAPI_URL || 'http://127.0.0.1:8000';
 const httpAgent = new http.Agent({
   keepAlive: false,       // 연결 즉시 종료 (응답 후 대기 시간 제거)
   maxSockets: 10,         // 동시 연결 수
-  timeout: 60000          // 요청 타임아웃
+  timeout: 120000          // 요청 타임아웃 (120초로 연장)
 });
 
 // Socket 연결 시 TCP_NODELAY 설정 (Nagle 알고리즘 비활성화)
@@ -29,7 +29,7 @@ const getUserIdFromToken = (req) => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return null;
     }
-    
+
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     return decoded.id || decoded.userId || decoded._id;
@@ -166,7 +166,7 @@ exports.analyzeOnly = async (req, res) => {
         `${FASTAPI_URL}/api/ai/diagnose`,
         formData,
         {
-          timeout: 60000,               // 60초 타임아웃
+          timeout: 120000,               // 120초 타임아웃 (연장)
           headers: {
             ...formData.getHeaders(),
             'Connection': 'close'
@@ -212,13 +212,13 @@ exports.analyzeOnly = async (req, res) => {
         confidence: data.confidence ?? 0,
         findings: Array.isArray(data.findings)
           ? data.findings.map((finding) => ({
-              condition: finding.condition || '알 수 없음',
-              probability: finding.probability ?? 0,
-              description: finding.description || '',
-            }))
+            condition: finding.condition || '알 수 없음',
+            probability: finding.probability ?? 0,
+            description: finding.description || '',
+          }))
           : [],
         recommendations: data.recommendations || [],
-        aiNotes: data.ai_notes || data.aiNotes || 'UNet 기반 폐 분할 + ResNet50 기반 COVID-19 분류 모델 추론 결과입니다.',
+        aiNotes: data.ai_notes || data.aiNotes || 'UNet 기반 폐 분할 + ResNet50 기반 흉부 엑스레이 질환 분류 추론 결과입니다.',
         predictedClass: data.predicted_class || null,
         gradcamPath: data.gradcam_path || null,
         gradcamPlusPath: data.gradcam_plus_path || null,
@@ -231,9 +231,9 @@ exports.analyzeOnly = async (req, res) => {
       console.error('요청 URL:', `${FASTAPI_URL}/api/ai/diagnose`);
       console.error('이미지 경로:', imagePath);
       console.error('전체 에러:', fastApiError);
-      return res.status(503).json({ 
+      return res.status(503).json({
         error: 'AI 진단 서비스를 사용할 수 없습니다. FastAPI 서버를 확인해주세요.',
-        details: fastApiError.message 
+        details: fastApiError.message
       });
     }
 
@@ -258,7 +258,7 @@ exports.analyzeOnly = async (req, res) => {
 
 exports.createDiagnosis = async (req, res) => {
   try {
-    const { patientId } = req.body;
+    const { patientId, symptoms } = req.body;
 
     if (!patientId) {
       return res.status(400).json({ error: 'patientId는 필수입니다.' });
@@ -310,7 +310,7 @@ exports.createDiagnosis = async (req, res) => {
         `${FASTAPI_URL}/api/ai/diagnose`,
         formData,
         {
-          timeout: 60000,               // 60초 타임아웃
+          timeout: 120000,               // 120초 타임아웃 (연장)
           headers: {
             ...formData.getHeaders(),
             'Connection': 'close'
@@ -357,39 +357,47 @@ exports.createDiagnosis = async (req, res) => {
         confidence: data.confidence ?? 0,
         findings: Array.isArray(data.findings)
           ? data.findings.map((finding) => ({
-              condition: finding.condition || '알 수 없음',
-              probability: finding.probability ?? 0,
-              description: finding.description || '',
-            }))
+            condition: finding.condition || '알 수 없음',
+            probability: finding.probability ?? 0,
+            description: finding.description || '',
+          }))
           : [],
         recommendations: data.recommendations || [],
-        aiNotes: data.ai_notes || data.aiNotes || 'UNet 기반 폐 분할 + ResNet50 기반 COVID-19 분류 모델 추론 결과입니다.',
+        aiNotes: data.ai_notes || data.aiNotes || 'UNet 기반 폐 분할 + ResNet50 기반 흉부 엑스레이 질환 분류 추론 결과입니다.',
         predictedClass: data.predicted_class || null,
         gradcamPath: data.gradcam_path || null,
         gradcamPlusPath: data.gradcam_plus_path || null,
         layercamPath: data.layercam_path || null,
       };
+
+      // 만약 FastAPI가 Cloudinary URL을 반환했다면 원본 이미지 URL도 업데이트
+      if (data.image_url) {
+        console.log(`📡 원본 이미지 URL을 Cloudinary URL로 교체: ${data.image_url}`);
+        // 로컬 파일 경로 대신 Cloudinary URL 사용
+        imageUrl = data.image_url;
+      }
     } catch (fastApiError) {
       console.error('FastAPI 호출 실패:');
       console.error('에러 메시지:', fastApiError.message);
       console.error('에러 응답:', fastApiError.response?.data);
-      return res.status(503).json({ 
+      return res.status(503).json({
         error: 'AI 진단 서비스를 사용할 수 없습니다. FastAPI 서버를 확인해주세요.',
-        details: fastApiError.message 
+        details: fastApiError.message
       });
     }
 
     // doctorId 추출: req.user (인증 미들웨어) 또는 토큰에서 직접 추출
     const doctorId = req.user?.id || getUserIdFromToken(req);
-    
+
     // 분석 결과를 MongoDB에 저장
     const diagnosis = await Diagnosis.create({
       patientId,
       doctorId: doctorId || null,
       imageUrl: imageUrl || null,
+      symptoms: symptoms || null,
       aiAnalysis,
     });
-    
+
     if (!doctorId) {
       console.log('⚠️ 경고: doctorId가 저장되지 않았습니다. 토큰이 없거나 유효하지 않습니다.');
     } else {
@@ -409,7 +417,7 @@ exports.createDiagnosis = async (req, res) => {
 // 이미 분석된 결과를 저장 (이미지 파일 없이)
 exports.saveDiagnosis = async (req, res) => {
   try {
-    const { patientId, aiAnalysis, imageUrl } = req.body;
+    const { patientId, aiAnalysis, imageUrl, symptoms } = req.body;
 
     if (!patientId) {
       return res.status(400).json({ error: 'patientId는 필수입니다.' });
@@ -432,6 +440,7 @@ exports.saveDiagnosis = async (req, res) => {
       patientId,
       doctorId: doctorId || null,
       imageUrl: imageUrl || null,
+      symptoms: symptoms || null,
       aiAnalysis,
     });
 
@@ -479,5 +488,51 @@ exports.reviewDiagnosis = async (req, res) => {
   } catch (error) {
     console.error('진단 검토 오류:', error);
     return res.status(500).json({ error: '진단 검토를 업데이트할 수 없습니다.' });
+  }
+};
+// 진단 이력 삭제
+exports.deleteDiagnosis = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const diagnosis = await Diagnosis.findById(id);
+    if (!diagnosis) {
+      return res.status(404).json({ error: '해당 진단 기록을 찾을 수 없습니다.' });
+    }
+
+    // 이미지 삭제 처리
+    if (diagnosis.imageUrl) {
+      if (diagnosis.imageUrl.startsWith('http')) {
+        // 1. Cloudinary 이미지인 경우 (FastAPI 호출)
+        try {
+          console.log(`📡 Cloudinary 이미지 삭제 요청: ${diagnosis.imageUrl}`);
+          // 전역 FASTAPI_URL 상수 사용
+          await axios.delete(`${FASTAPI_URL}/api/ai/image`, {
+            params: { image_url: diagnosis.imageUrl }
+          });
+          console.log('✅ Cloudinary 이미지 삭제 성공');
+        } catch (err) {
+          console.warn('⚠️ Cloudinary 이미지 삭제 실패 (이미 데이터베이스에는 없을 수 있음):', err.message);
+        }
+      } else {
+        // 2. 로컬 이미지 파일인 경우
+        const filePath = path.join(__dirname, '..', diagnosis.imageUrl);
+        if (fs.existsSync(filePath)) {
+          try {
+            fs.unlinkSync(filePath);
+            console.log(`🗑️ 연관 이미지 파일 삭제 완료: ${filePath}`);
+          } catch (err) {
+            console.error('⚠️ 이미지 파일 삭제 실패:', err);
+          }
+        }
+      }
+    }
+
+    await Diagnosis.findByIdAndDelete(id);
+    
+    res.status(200).json({ message: '진단 기록이 성공적으로 삭제되었습니다.' });
+  } catch (error) {
+    console.error('진단 삭제 오류:', error);
+    res.status(500).json({ error: '진단 기록을 삭제하는 중 오류가 발생했습니다.' });
   }
 };

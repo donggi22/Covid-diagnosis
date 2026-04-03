@@ -126,10 +126,10 @@
 }
 
 .table-header-row th {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #495057;
-  padding: 16px 20px;
+  padding: 12px 10px;
   text-align: center;
   vertical-align: middle;
   background: #f8f9fa;
@@ -168,7 +168,7 @@
 }
 
 .table-data-row td {
-  padding: 16px 20px;
+  padding: 10px 10px;
   vertical-align: middle;
   text-align: center;
   background: white;
@@ -290,7 +290,7 @@
 /* 액션 컬럼 */
 .cell-actions {
   text-align: center;
-  min-width: 200px;
+  min-width: 160px;
 }
 
 .cell-actions button {
@@ -302,9 +302,9 @@
 .btn-diagnose {
   background: #10b981;
   color: white;
-  padding: 10px 24px;
+  padding: 4px 10px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   border: none;
   cursor: pointer;
@@ -322,21 +322,21 @@
 
 /* 삭제 버튼 */
 .btn-delete {
-  background: transparent;
-  border: 1px solid #d1d5db;
-  color: #6b7280;
-  padding: 10px 24px;
+  background: #ef4444;
+  border: 1px solid #ef4444;
+  color: white;
+  padding: 4px 10px;
   border-radius: 6px;
-  font-size: 14px;
-  font-weight: 400;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .btn-delete:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
-  color: #374151;
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
 }
 
 .btn-delete:disabled {
@@ -504,15 +504,15 @@ body.dark-mode .btn-diagnose:hover {
 }
 
 body.dark-mode .btn-delete {
-  background: transparent;
-  border-color: #4b5563;
-  color: #9ca3af;
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fecaca;
 }
 
 body.dark-mode .btn-delete:hover {
-  background: #374151;
-  border-color: #6b7280;
-  color: #d1d5db;
+  background: #991b1b;
+  border-color: #b91c1c;
+  color: white;
 }
 
 body.dark-mode .table-info-row {
@@ -745,15 +745,15 @@ body.dark-mode .form-input:focus {
 }
 
 .dark .btn-delete {
-  background: transparent;
-  border-color: #4b5563;
-  color: #9ca3af;
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fecaca;
 }
 
 .dark .btn-delete:hover {
-  background: #374151;
-  border-color: #6b7280;
-  color: #d1d5db;
+  background: #991b1b;
+  border-color: #b91c1c;
+  color: white;
 }
 
 .dark .table-info-row {

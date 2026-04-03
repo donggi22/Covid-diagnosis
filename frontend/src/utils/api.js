@@ -144,6 +144,10 @@ export const diagnosisAPI = {
     const response = await api.get(`/api/diagnosis/${id}`);
     return response.data;
   },
+  deleteDiagnosis: async (id) => {
+    const response = await api.delete(`/api/diagnosis/${id}`);
+    return response.data;
+  },
 
   // AI 분석만 수행 (저장 안함)
   analyzeOnly: async (patientId, imageFile) => {

@@ -57,11 +57,13 @@ const RecentDiagnosisHistory = () => {
     switch (status) {
       case '완료':
       case 'confirmed':
+      case 'approved':
         return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
       case '대기':
       case 'pending':
         return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case '확인 필요':
+      case '검토 필요':
+      case 'rejected':
       case 'review_needed':
         return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
       default:
@@ -71,12 +73,14 @@ const RecentDiagnosisHistory = () => {
 
   const getStatusText = (status) => {
     const statusMap = {
-      '완료': '완료',
-      'confirmed': '완료',
+      '완료': '진단 확정',
+      'confirmed': '진단 확정',
+      'approved': '진단 확정',
       '대기': '대기',
       'pending': '대기',
-      '확인 필요': '확인 필요',
-      'review_needed': '확인 필요',
+      '확인 필요': '검토 필요',
+      'review_needed': '검토 필요',
+      'rejected': '검토 필요',
     };
     return statusMap[status] || status || '대기';
   };

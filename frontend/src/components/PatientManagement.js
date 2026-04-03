@@ -231,7 +231,7 @@ const PatientManagement = ({ isEmbed = false }) => {
                           </td>
                           <td className="cell-actions">
                             <button
-                              onClick={() => navigate('/diagnosis', { state: { patientId: patient._id, patientName: patient.name } })}
+                              onClick={() => navigate('/diagnosis', { state: { patientId: patient._id, patient: patient } })}
                               className="btn-diagnose"
                             >
                               진단하기
@@ -466,7 +466,7 @@ const PatientManagement = ({ isEmbed = false }) => {
                         </td>
                         <td className="cell-actions">
                           <button
-                            onClick={() => navigate('/diagnosis', { state: { patientId: patient._id, patientName: patient.name } })}
+                            onClick={() => navigate('/diagnosis', { state: { patientId: patient._id, patient: patient } })}
                             className="btn-diagnose"
                           >
                             진단하기

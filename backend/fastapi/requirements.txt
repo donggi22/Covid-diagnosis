@@ -41,14 +41,13 @@ sympy==1.14.0
 tifffile==2025.10.16
 torch==2.9.0
 torchvision==0.24.0
-# torchxrayvision==1.4.0
 tqdm==4.67.1
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.5.0
 uvicorn==0.38.0
-# uvloop==0.22.1
 watchfiles==1.1.1
 websockets==15.0.1
 python-multipart==0.0.9
+cloudinary==1.41.0

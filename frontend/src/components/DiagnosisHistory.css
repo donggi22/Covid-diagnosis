@@ -88,10 +88,10 @@
 }
 
 .table-header-row th {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #495057;
-  padding: 16px 12px;
+  padding: 12px 8px;
   text-align: center;
   vertical-align: middle;
 }
@@ -115,7 +115,7 @@
 }
 
 .table-data-row td {
-  padding: 16px 12px;
+  padding: 12px 8px;
   vertical-align: middle;
   border-bottom: 1px solid #e9ecef;
   text-align: center;
@@ -183,6 +183,18 @@
   width: 130px;
   min-width: 130px;
   max-width: 130px;
+}
+
+.cell-symptoms {
+  font-size: 14px;
+  color: #495057;
+  text-align: center;
+  width: 150px;
+  min-width: 150px;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cell-image {
@@ -435,6 +447,34 @@
   background: #374151;
 }
 
+/* 진단 이력 전용 삭제 버튼 */
+.btn-delete {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.btn-delete:hover {
+  background-color: #dc2626;
+  color: white;
+}
+
+.btn-delete:disabled {
+  background-color: #fca5a5;
+  cursor: not-allowed;
+}
+
+.dark .btn-delete {
+  background-color: #7f1d1d;
+  color: #fecaca;
+}
+
+.dark .btn-delete:hover {
+  background-color: #991b1b;
+  color: white;
+}
+
 .dark .table-data-row td {
   color: #e5e7eb;
   border-bottom-color: #374151;
@@ -479,22 +519,3 @@
 .dark .summary-content p {
   color: #9ca3af;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -15,6 +15,7 @@ const aiAnalysisSchema = new mongoose.Schema(
     findings: [findingSchema],
     recommendations: [String],
     aiNotes: String,
+    predictedClass: String,
     gradcamPath: String,
     gradcamPlusPath: String,
     layercamPath: String,
@@ -27,6 +28,7 @@ const diagnosisSchema = new mongoose.Schema(
     patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient', required: true },
     doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     imageUrl: { type: String },
+    symptoms: { type: String },
     aiAnalysis: aiAnalysisSchema,
     review: {
       summary: String,

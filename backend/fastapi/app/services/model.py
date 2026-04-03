@@ -593,8 +593,8 @@ def _generate_layercam(model: nn.Module, input_tensor: torch.Tensor, target_clas
         input_tensor.requires_grad_(False)
 
 
-def _save_gradcam_image(original_image: Image.Image, gradcam: np.ndarray, mask: torch.Tensor, output_path: Path) -> Path:
-    """Grad-CAM 히트맵을 원본 이미지에 오버레이하여 저장한다."""
+def _save_gradcam_image(original_image: Image.Image, gradcam: np.ndarray, mask: torch.Tensor) -> Image.Image:
+    """Grad-CAM 히트맵을 원본 이미지에 오버레이한 Image 객체를 반환한다. (로컬 저장 생략)"""
     # 원본 이미지를 numpy 배열로 변환
     original_image_resized = original_image.resize((224, 224))
     img_array = np.array(original_image_resized)
@@ -611,27 +611,17 @@ def _save_gradcam_image(original_image: Image.Image, gradcam: np.ndarray, mask: 
     if len(img_array.shape) == 2:
         img_array = cv2.cvtColor(img_array, cv2.COLOR_GRAY2RGB)
 
-    # 마스크를 numpy로 변환 및 리사이즈
-    mask_np = mask.squeeze().cpu().numpy()
-    mask_resized = cv2.resize(mask_np, (224, 224), interpolation=cv2.INTER_NEAREST)
-    
     overlayed = cv2.addWeighted(img_array, 0.6, heatmap, 0.4, 0)
-
-    # 마스크 영역만 오버레이, 나머지는 원본 유지
-    result = img_array.copy()
-    mask_bool = mask_resized > 0.5
-    result[mask_bool] = overlayed[mask_bool]
     
-    # 이미지 저장
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    Image.fromarray(overlayed).save(output_path)
-    
-    return output_path
+    # 이미지 객체 생성
+    img_result = Image.fromarray(overlayed)
+    return img_result
 
 
 def predict(image_path: Path) -> Dict[str, Any]:
     """이미지를 예측한다 (분할 → 분류 파이프라인)."""
     import time
+    from . import cloudinary_service
 
     total_start = time.time()
 
@@ -723,11 +713,10 @@ def predict(image_path: Path) -> Dict[str, Any]:
 
             original_image = Image.open(image_path).convert('RGB')
 
-            gradcam_base = os.getenv('GRADCAM_STORAGE_PATH', str(Path(__file__).resolve().parent.parent / 'static'))
-            static_dir = Path(gradcam_base)
-            gradcam_dir = static_dir / 'gradcam'
-            gradcam_dir.mkdir(parents=True, exist_ok=True)
 
+            # 각 CAM 작업 수집
+            cam_tasks = []
+            
             # Grad-CAM 생성
             gradcam = _generate_gradcam(
                 _classification_model,
@@ -736,11 +725,9 @@ def predict(image_path: Path) -> Dict[str, Any]:
                 layer_name='layer4'
             )
             if gradcam is not None:
-                gradcam_filename = f"gradcam_{image_path.stem}_{predicted_class_idx}.png"
-                gradcam_path = gradcam_dir / gradcam_filename
-                _save_gradcam_image(original_image, gradcam, mask, gradcam_path)
-                gradcam_relative_path = f"/static/gradcam/{gradcam_filename}"
-                print(f'     ✓ Grad-CAM 저장: {gradcam_filename}')
+                gradcam_filename = f"gradcam_{image_path.stem}_{predicted_class_idx}.jpg"
+                gradcam_img = _save_gradcam_image(original_image, gradcam, mask)
+                cam_tasks.append({'image': gradcam_img, 'filename': gradcam_filename, 'type': 'gradcam'})
 
             # Grad-CAM++ 생성
             gradcam_plus = _generate_gradcam_plus(
@@ -750,11 +737,9 @@ def predict(image_path: Path) -> Dict[str, Any]:
                 layer_name='layer4'
             )
             if gradcam_plus is not None:
-                gradcam_plus_filename = f"gradcam_plus_{image_path.stem}_{predicted_class_idx}.png"
-                gradcam_plus_path = gradcam_dir / gradcam_plus_filename
-                _save_gradcam_image(original_image, gradcam_plus, mask, gradcam_plus_path)
-                gradcam_plus_relative_path = f"/static/gradcam/{gradcam_plus_filename}"
-                print(f'     ✓ Grad-CAM++ 저장: {gradcam_plus_filename}')
+                gradcam_plus_filename = f"gradcam_plus_{image_path.stem}_{predicted_class_idx}.jpg"
+                gradcam_plus_img = _save_gradcam_image(original_image, gradcam_plus, mask)
+                cam_tasks.append({'image': gradcam_plus_img, 'filename': gradcam_plus_filename, 'type': 'gradcam_plus'})
 
             # Layer-CAM 생성
             layercam = _generate_layercam(
@@ -764,11 +749,27 @@ def predict(image_path: Path) -> Dict[str, Any]:
                 layer_name='layer4'
             )
             if layercam is not None:
-                layercam_filename = f"layercam_{image_path.stem}_{predicted_class_idx}.png"
-                layercam_path = gradcam_dir / layercam_filename
-                _save_gradcam_image(original_image, layercam, mask, layercam_path)
-                layercam_relative_path = f"/static/gradcam/{layercam_filename}"
-                print(f'     ✓ Layer-CAM 저장: {layercam_filename}')
+                layercam_filename = f"layercam_{image_path.stem}_{predicted_class_idx}.jpg"
+                layercam_img = _save_gradcam_image(original_image, layercam, mask)
+                cam_tasks.append({'image': layercam_img, 'filename': layercam_filename, 'type': 'layercam'})
+
+            # 병렬 업로드 수행
+            if cam_tasks:
+                print(f'     📤 {len(cam_tasks)}개의 CAM 이미지 병렬 업로드 시작...')
+                upload_start = time.time()
+                urls = cloudinary_service.upload_images_parallel(cam_tasks)
+                
+                # 결과 매핑
+                for i, task in enumerate(cam_tasks):
+                    url = urls[i]
+                    if task['type'] == 'gradcam':
+                        gradcam_relative_path = url or f"/static/gradcam/{task['filename']}"
+                    elif task['type'] == 'gradcam_plus':
+                        gradcam_plus_relative_path = url or f"/static/gradcam/{task['filename']}"
+                    elif task['type'] == 'layercam':
+                        layercam_relative_path = url or f"/static/gradcam/{task['filename']}"
+                
+                print(f'     ✅ 병렬 업로드 완료 ({time.time() - upload_start:.2f}초)')
 
             cam_time = time.time() - cam_start
             print(f'  ✓ 모든 CAM 생성 완료: {cam_time:.4f}초\n')
@@ -799,7 +800,7 @@ def predict(image_path: Path) -> Dict[str, Any]:
         'predicted_class': predicted_class,
         'findings': findings,
         'recommendations': recommendations,
-        'ai_notes': 'UNet 기반 폐 분할 + ResNet50 기반 COVID-19 분류 모델 추론 결과입니다.'
+        'ai_notes': 'UNet 기반 폐 분할 + ResNet50 기반 흉부 엑스레이 질환 분류 추론 결과입니다.'
     }
     
     if gradcam_relative_path:

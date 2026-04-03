@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Heart, UserCheck, Users, Package } from 'react-feather';
+import { Heart, UserCheck, Users, Package, User, MoreVertical } from 'react-feather';
 
 const Card = ({ className = '', children }) => (
   <div className={`bg-white rounded-[14px] shadow-[0_8px_30px_rgba(16,24,40,0.08)] ${className}`}>{children}</div>
@@ -46,13 +46,17 @@ const AppointmentRow = ({ row }) => (
 );
 
 const DoctorCard = ({ name, role }) => (
-  <li className="grid grid-cols-[48px_1fr_auto] items-center gap-3 p-3 rounded-lg bg-slate-50">
-    <img className="w-12 h-12 rounded-xl object-cover" src="https://i.pravatar.cc/60" alt={name} />
-    <div>
-      <p className="text-[15px] font-medium text-slate-700">{name}</p>
-      <p className="text-xs text-slate-400">{role}</p>
+  <li className="grid grid-cols-[48px_1fr_auto] items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 transition-all cursor-pointer group border border-transparent hover:border-slate-100">
+    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-600/10 flex items-center justify-center text-blue-600 shadow-inner group-hover:scale-105 transition-transform duration-300">
+      <User size={24} strokeWidth={2.5} />
     </div>
-    <button className="text-slate-400">⋮</button>
+    <div className="min-w-0">
+      <p className="text-sm font-bold text-slate-800 truncate leading-tight">{name}</p>
+      <p className="text-[11px] font-medium text-slate-400 truncate mt-0.5">{role}</p>
+    </div>
+    <button className="p-1.5 text-slate-300 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+      <MoreVertical size={16} />
+    </button>
   </li>
 );
 
