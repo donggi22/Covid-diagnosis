@@ -1,5 +1,5 @@
 {
-  "name": "final_front2",
+  "name": "frontend",
   "version": "1.0.0",
   "description": "의료진용 AI 진단 시스템 프론트엔드",
   "main": "index.js",
