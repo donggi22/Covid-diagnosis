@@ -101,7 +101,7 @@ const MainLayout = ({ children, customSidebar = null, hideSidebar = false, mainC
       const storedUser = localStorage.getItem('user');
       const userName = localStorage.getItem('userName');
       const userEmail = localStorage.getItem('userEmail');
-      
+
       if (storedUser) {
         try {
           const user = JSON.parse(storedUser);
@@ -161,7 +161,7 @@ const MainLayout = ({ children, customSidebar = null, hideSidebar = false, mainC
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
               <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden"
-                   style={{ background: 'linear-gradient(135deg, #5b8def22, #86a8ff22)' }}>
+                style={{ background: 'linear-gradient(135deg, #5b8def22, #86a8ff22)' }}>
                 <img src={logo} alt="MediKit Logo" className="w-full h-full object-contain" />
               </div>
               <span className="text-xl font-extrabold text-slate-900 dark:text-white">COVISION</span>
@@ -179,10 +179,10 @@ const MainLayout = ({ children, customSidebar = null, hideSidebar = false, mainC
                 <div className="flex items-center gap-2 bg-white rounded-full shadow px-2 py-1">
                   <img
                     className="w-8 h-8 rounded-lg object-cover"
-                    src={userInfo.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(userInfo.name)}&background=5b8def&color=fff&size=40`}
+                    src={userInfo.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(userInfo.name?.slice(0, 1))}&background=5b8def&color=fff&size=40`}
                     alt="user"
                     onError={(e) => {
-                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userInfo.name)}&background=5b8def&color=fff&size=40`;
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userInfo.name?.slice(0, 1))}&background=5b8def&color=fff&size=40`;
                     }}
                   />
                   <div className="leading-none">
@@ -220,11 +220,10 @@ const MainLayout = ({ children, customSidebar = null, hideSidebar = false, mainC
                       <button
                         key={label}
                         onClick={() => navigate(path)}
-                        className={`flex items-center px-4 py-3 rounded-xl transition-colors ${
-                          isActive
-                            ? 'bg-[#3b82f6] text-white'
-                            : 'text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700'
-                        }`}>
+                        className={`flex items-center px-4 py-3 rounded-xl transition-colors ${isActive
+                          ? 'bg-[#3b82f6] text-white'
+                          : 'text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700'
+                          }`}>
                         <IconComponent
                           size={18}
                           className="mr-3"
