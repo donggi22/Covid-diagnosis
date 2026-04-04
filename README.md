@@ -67,6 +67,10 @@ cp .env.example .env
 ```env
 MONGODB_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/medical-ai?retryWrites=true&w=majority
 MONGODB_DB=medical-ai
+
+CLOUDINARY_CLOUD_NAME=" "
+CLOUDINARY_API_KEY=" "
+CLOUDINARY_API_SECRET=" "
 ```
 
 ---
