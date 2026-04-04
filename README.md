@@ -1,4 +1,33 @@
-# 최종프로젝트
+# CNN 기반 흉부 X-ray 폐질환 진단 보조 서비스
+
+## 프로젝트 구조
+
+```
+구조:
+├── frontend/              # React 프론트엔드
+│   ├── src/
+│   │   ├── components/       # UI 컴포넌트 (ThemeLangToggle 등)
+│   │   ├── pages/            # 라우팅 페이지들
+│   │   └── utils/            # 유틸리티 함수
+│   └── public/               # 정적 파일
+│
+├── backend/               # 백엔드 서버
+│   ├── express/              # Node.js API 서버
+│   └── fastapi/              # Python AI 추론 서버
+│
+├── 모델 파일/
+│   ├── clf_best_model.pth    # 분류 모델 (295MB)
+│   └── seg_best_model.pth    # 세그멘테이션 모델 (372MB)
+│
+├── 데이터 분석/
+│   ├── EDA.ipynb             # 데이터 탐색
+│   └── 모델학습.ipynb         # 모델 학습 코드
+│
+└── 문서/
+    ├── README.md
+    ├── 데이터베이스_요구사항분석서.md
+    └── 테이블명세서.md
+```
 
 ### 환경 변수 파일(.env) 설정
 
