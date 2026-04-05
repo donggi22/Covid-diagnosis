@@ -1,4 +1,25 @@
 # CNN 기반 흉부 X-ray 폐질환 진단 보조 서비스
+입력된 흉부 X-ray 분석을 통해 폐질환을 자동 분류하고,
+Grad-CAM을 활용하여 모델이 판단에 활용한 병변 영역을 시각화함으로써
+영상의학과 의료진이 AI 예측 결과를 기반으로 보다 정확하고 신뢰도 높은 판단을 내릴 수 있도록 지원하는 진단 보조 서비스
+
+## 주요 기능
+1. 대시보드
+2. 환자관리
+3. AI 진단
+4. 진단이력
+5. 일정관리
+
+## 기술스택
+- Frontend : React 19
+- Backend : Node.js(Express.js) + FastAPI
+- AI/ML : PyTorch
+- Database : MongoDB Atlas(Managed NoSQL)
+- Infra : Docker, Kubernetes
+
+## 서비스 아키텍처
+![서비스 아키텍처](architecture.png)
+
 
 ## 프로젝트 구조
 
@@ -28,6 +49,11 @@
     ├── 데이터베이스_요구사항분석서.md
     └── 테이블명세서.md
 ```
+
+
+<br>
+
+# 흉부 X-ray 폐질환 진단 보조 서비스 실행 가이드
 
 ### 환경 변수 파일(.env) 설정
 
@@ -68,9 +94,9 @@ cp .env.example .env
 MONGODB_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/medical-ai?retryWrites=true&w=majority
 MONGODB_DB=medical-ai
 
-CLOUDINARY_CLOUD_NAME=" "
-CLOUDINARY_API_KEY=" "
-CLOUDINARY_API_SECRET=" "
+CLOUDINARY_CLOUD_NAME="CLOUD_NAME"
+CLOUDINARY_API_KEY="API_KEY="
+CLOUDINARY_API_SECRET="API_SECRET"
 ```
 
 ---
