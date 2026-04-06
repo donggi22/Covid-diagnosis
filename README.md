@@ -34,38 +34,7 @@ graph TB
     A --> G[사용자 인터페이스<br/>환자관리, 진단 UI]
     B --> H[비즈니스 로직<br/>인증, CRUD, 검증]
     D --> I[AI 분석<br/>X-ray 분석, Grad-CAM]
-    
-    style A fill:#e1f5fe
-    style B fill:#f3e5f5
-    style D fill:#e8f5e8
-    style C fill:#fff3e0
-    style F fill:#fce4ec
 ```
-
-### 데이터 흐름
-```mermaid
-sequenceDiagram
-    participant U as 사용자
-    participant F as 프론트엔드
-    participant E as Express API
-    participant FA as FastAPI
-    participant DB as MongoDB
-    participant C as Cloudinary
-
-    U->>F: 이미지 업로드
-    F->>E: FormData 전송
-    E->>E: 로컬 저장 (multer)
-    E->>FA: AI 분석 요청
-    FA->>FA: AI 모델 예측
-    FA->>C: 이미지 업로드
-    FA->>E: 분석 결과 반환
-    E->>F: 결과 표시
-    U->>F: 결과 저장 버튼
-    F->>E: 저장 요청
-    E->>DB: 결과 저장
-    E->>F: 저장 완료
-```
-
 
 ## 프로젝트 구조
 
